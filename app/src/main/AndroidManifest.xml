@@ -24,6 +24,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".platform.DogSyncService"
+            android:exported="false" />
+
+        <receiver
+            android:name=".platform.NetworkChangeReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

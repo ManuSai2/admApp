@@ -1,4 +1,4 @@
-package com.example.admapp
+    package com.example.admapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
