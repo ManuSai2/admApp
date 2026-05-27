@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("org.owasp.dependencycheck")
 }
 
 android {
@@ -85,4 +86,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+}
+dependencyCheck {
+    formats = listOf("HTML", "JSON")
+    failBuildOnCVSS = 11.0f
+    analyzers.assemblyEnabled = false
 }
