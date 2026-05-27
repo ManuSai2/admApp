@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+
+  desc "Run unit tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(task: "assembleDebug")
+  end
+
+end
