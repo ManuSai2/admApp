@@ -77,3 +77,37 @@ Comando:
 En Windows:
 ```bash
 gradlew.bat test
+```
+
+## Fastlane
+Se utiliza Fastlane para automatizar tareas de build y testing.
+
+```md
+## Instalación de Fastlane
+
+gem install fastlane
+```
+
+```bash
+fastlane test
+fastlane build_debug
+```
+
+## Seguridad y calidad
+Se utiliza Dependency Check para detectar vulnerabilidades en dependencias.
+Comando:
+```bash
+./gradlew dependencyCheckAnalyze
+```
+En Windows:
+```bash
+gradlew.bat dependencyCheckAnalyze
+```
+
+## Entregables
+- Código fuente en GitHub.
+- README.
+- Mockups light/dark.
+- Reportes de seguridad/calidad.
+- Video demo de 30 a 60 segundos.
+- Presentación final de máximo 5 diapositivas.
