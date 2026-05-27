@@ -73,3 +73,7 @@ Comando:
 
 ```bash
 ./gradlew test
+```
+En Windows:
+```bash
+gradlew.bat test
