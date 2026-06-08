@@ -27,19 +27,17 @@ class DetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            // Observe favorite status reactively
             repository.isFavorite(breedName)
                 .onEach { isFav -> _uiState.update { it.copy(isFavorite = isFav) } }
                 .launchIn(this)
 
-            // Load breed images
             repository.getBreedImages(breedName)
                 .onSuccess { images ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             breed = Breed(name = breedName),
-                            images = images.take(20)   // limit for performance
+                            images = images.take(20)
                         )
                     }
                 }

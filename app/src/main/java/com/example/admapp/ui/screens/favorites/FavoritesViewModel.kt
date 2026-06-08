@@ -65,4 +65,13 @@ class FavoritesViewModel(
     fun clearImageCache() {
         _breedImages.value = emptyMap()
     }
+
+    fun refreshImageForBreed(breedName: String) {
+        viewModelScope.launch {
+            repository.getRandomBreedImage(breedName)
+                .onSuccess { breedImage ->
+                    _breedImages.update { it + (breedName to breedImage.url) }
+                }
+        }
+    }
 }

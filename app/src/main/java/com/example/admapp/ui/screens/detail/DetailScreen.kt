@@ -55,7 +55,6 @@ fun DetailScreen(
                     }
                 },
                 actions = {
-                    // Share Intent
                     IconButton(onClick = {
                         val shareUrl = viewModel.getShareImageUrl()
                         if (shareUrl.isNotBlank()) {
@@ -68,7 +67,6 @@ fun DetailScreen(
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Compartir")
                     }
-                    // Favorite toggle
                     IconButton(onClick = viewModel::toggleFavorite) {
                         Icon(
                             imageVector = if (uiState.isFavorite) Icons.Default.Favorite
@@ -109,7 +107,6 @@ fun DetailScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Header item
                         item(span = { GridItemSpan(2) }) {
                             Column(modifier = Modifier.padding(bottom = 8.dp)) {
                                 Text(

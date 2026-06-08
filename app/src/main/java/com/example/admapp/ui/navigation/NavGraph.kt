@@ -67,7 +67,10 @@ fun DogFinderNavGraph(
         }
 
         composable(Screen.Settings.route) {
-            SettingsScreen(viewModel = settingsViewModel)
+            SettingsScreen(
+                viewModel = settingsViewModel,
+                favoritesViewModel = favoritesViewModel
+            )
         }
     }
 }

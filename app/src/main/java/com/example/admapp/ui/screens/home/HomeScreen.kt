@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,12 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
-import com.example.admapp.domain.model.Breed
-import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,12 +25,21 @@ fun HomeScreen(
     onBreedClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showSortMenu by remember { mutableStateOf(false) }
+    val gridState = rememberLazyGridState()
+
+    LaunchedEffect(uiState.sortOrder, uiState.searchQuery) {
+        gridState.scrollToItem(0)
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text("🐾", style = MaterialTheme.typography.titleLarge)
                         Column {
                             Text(
@@ -47,9 +56,48 @@ fun HomeScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                actions = {
+                    Box {
+                        TextButton(onClick = { showSortMenu = true }) {
+                            Text(
+                                text = when (uiState.sortOrder) {
+                                    SortOrder.A_Z -> "A → Z"
+                                    SortOrder.Z_A -> "Z → A"
+                                },
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Ordenar",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            SortOrder.entries.forEach { order ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = when (order) {
+                                                SortOrder.A_Z -> "🔤 A → Z"
+                                                SortOrder.Z_A -> "🔤 Z → A"
+                                            },
+                                            fontWeight = if (uiState.sortOrder == order)
+                                                FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.setSortOrder(order)
+                                        showSortMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             )
         }
     ) { padding ->
@@ -93,12 +141,16 @@ fun HomeScreen(
                 }
                 else -> {
                     LazyVerticalGrid(
+                        state = gridState,
                         columns = GridCells.Fixed(2),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(uiState.filteredBreeds, key = { it.name }) { breed ->
+                            LaunchedEffect(breed.name) {
+                                viewModel.loadImageIfMissing(breed.name)
+                            }
                             BreedCard(
                                 breedName = breed.name,
                                 imageUrl = uiState.breedImages[breed.name],
@@ -125,7 +177,6 @@ fun BreedCard(breedName: String, imageUrl: String?, onClick: () -> Unit) {
         )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen de fondo
             if (imageUrl != null) {
                 SubcomposeAsyncImage(
                     model = imageUrl,
@@ -134,10 +185,7 @@ fun BreedCard(breedName: String, imageUrl: String?, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxSize(),
                     loading = {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                         }
                     },
                     error = {
@@ -152,12 +200,10 @@ fun BreedCard(breedName: String, imageUrl: String?, onClick: () -> Unit) {
                 }
             }
 
-            // Nombre encima de la imagen, abajo con fondo semitransparente
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomStart)
-                    .padding(0.dp),
+                    .align(Alignment.BottomStart),
                 contentAlignment = Alignment.BottomStart
             ) {
                 Surface(
@@ -178,11 +224,11 @@ fun BreedCard(breedName: String, imageUrl: String?, onClick: () -> Unit) {
 @Composable
 fun ErrorState(message: String, onRetry: () -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "Algo salió mal",
-                style = MaterialTheme.typography.titleMedium
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(text = "Algo salió mal", style = MaterialTheme.typography.titleMedium)
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,

@@ -21,6 +21,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
@@ -36,6 +37,7 @@ fun FavoritesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val breedImages by viewModel.breedImages.collectAsStateWithLifecycle()
     var showSortMenu by remember { mutableStateOf(false) }
+    var selectedBreed by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -55,7 +57,7 @@ fun FavoritesScreen(
                     }
                 },
                 actions = {
-                    // Botón de ordenamiento (solo visible si hay items)
+                    // Botón de ordenamiento
                     if (!uiState.isEmpty) {
                         Box {
                             TextButton(
@@ -149,13 +151,57 @@ fun FavoritesScreen(
                                     breed = breed,
                                     imageUrl = breedImages[breed.name],
                                     onClick = { onBreedClick(breed.name) },
-                                    onDelete = { viewModel.removeFavorite(breed.name) }
+                                    onDelete = { viewModel.removeFavorite(breed.name) },
+                                    onRandomImage = {
+                                        viewModel.refreshImageForBreed(breed.name)
+                                        selectedBreed = breed.name
+                                    }
                                 )
                             }
                         }
                     }
                 }
             }
+        }
+        selectedBreed?.let { breedName ->
+            val imageUrl = breedImages[breedName]
+            AlertDialog(
+                onDismissRequest = { selectedBreed = null },
+                title = {
+                    Text(
+                        text = breedName.capitalize(Locale.current),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    if (imageUrl != null) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Imagen de $breedName",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(280.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(280.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.refreshImageForBreed(breedName) }) {
+                        Text("🔀 Otra imagen")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { selectedBreed = null }) { Text("Cerrar") }
+                }
+            )
         }
     }
 }
@@ -165,7 +211,8 @@ private fun FavoriteItem(
     breed: Breed,
     imageUrl: String?,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onRandomImage: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -183,7 +230,6 @@ private fun FavoriteItem(
                 .height(100.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Imagen o fallback emoji
             Box(
                 modifier = Modifier
                     .width(100.dp)
@@ -199,7 +245,6 @@ private fun FavoriteItem(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-                    // Gradiente sutil sobre la imagen
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -213,7 +258,6 @@ private fun FavoriteItem(
                             )
                     )
                 } else {
-                    // Placeholder animado mientras carga
                     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
                     val alpha by infiniteTransition.animateFloat(
                         initialValue = 0.3f,
@@ -231,7 +275,6 @@ private fun FavoriteItem(
                     )
                 }
             }
-
             // Contenido textual
             Column(
                 modifier = Modifier
@@ -259,7 +302,17 @@ private fun FavoriteItem(
                     )
                 }
             }
-
+            // Botón imagen random
+            IconButton(
+                onClick = onRandomImage,
+                modifier = Modifier.padding(end = 0.dp)
+            ) {
+                Icon(
+                    Icons.Default.Shuffle,         // o Icons.Default.Casino
+                    contentDescription = "Imagen aleatoria",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
             // Botón eliminar
             IconButton(
                 onClick = onDelete,
