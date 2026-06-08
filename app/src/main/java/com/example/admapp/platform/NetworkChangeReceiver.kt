@@ -3,15 +3,19 @@ package com.example.admapp.platform
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.util.Log
 import android.widget.Toast
 
 class NetworkChangeReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
-        Toast.makeText(
-            context,
-            "Dog Finder detectó un cambio de conectividad",
-            Toast.LENGTH_SHORT
-        ).show()
+        if (intent.action == ConnectivityManager.CONNECTIVITY_ACTION) {
+            Log.d("NetworkChangeReceiver", "Connectivity change detected")
+            Toast.makeText(
+                context,
+                "Cambio de conectividad detectado",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 }

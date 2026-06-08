@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     id("org.owasp.dependencycheck")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 android {
@@ -92,4 +93,16 @@ dependencyCheck {
     formats = listOf("HTML", "JSON")
     failBuildOnCVSS = 11.0f
     analyzers.assemblyEnabled = false
+}
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    ignoreFailures = true
+
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+    }
 }
