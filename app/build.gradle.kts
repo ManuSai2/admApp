@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
-    id("org.owasp.dependencycheck")
-    id("io.gitlab.arturbosch.detekt")
+    alias(libs.plugins.owasp)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -87,6 +87,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // DataStore para persistir preferencias (modo oscuro, notificaciones, etc.)
+    implementation(libs.androidx.datastore.preferences)
 
 }
 dependencyCheck {

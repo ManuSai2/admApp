@@ -6,6 +6,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.admapp.ui.screens.config.SettingsScreen
+import com.example.admapp.ui.screens.config.SettingsViewModel
 import com.example.admapp.ui.screens.detail.DetailScreen
 import com.example.admapp.ui.screens.detail.DetailViewModel
 import com.example.admapp.ui.screens.favorites.FavoritesScreen
@@ -14,9 +16,10 @@ import com.example.admapp.ui.screens.home.HomeScreen
 import com.example.admapp.ui.screens.home.HomeViewModel
 
 sealed class Screen(val route: String) {
-    data object Home : Screen("home")
-    data object Favorites : Screen("favorites")
-    data object Detail : Screen("detail/{breedName}") {
+    data object Home     : Screen("home")
+    data object Favorites: Screen("favorites")
+    data object Settings : Screen("settings")
+    data object Detail   : Screen("detail/{breedName}") {
         fun createRoute(breedName: String) = "detail/$breedName"
     }
 }
@@ -26,7 +29,8 @@ fun DogFinderNavGraph(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
     detailViewModel: DetailViewModel,
-    favoritesViewModel: FavoritesViewModel
+    favoritesViewModel: FavoritesViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     NavHost(
         navController = navController,
@@ -60,6 +64,10 @@ fun DogFinderNavGraph(
                     navController.navigate(Screen.Detail.createRoute(breedName))
                 }
             )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(viewModel = settingsViewModel)
         }
     }
 }
