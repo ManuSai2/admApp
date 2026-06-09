@@ -210,7 +210,7 @@ gradlew.bat dependencyCheckAnalyze
 ## Entregables
 - Código fuente en GitHub.
 - README.
-- Mockups light/dark.
+- Mockups [Ver prototipo](https://www.figma.com/design/0jq5vQmsS8ss9dNxDg378v/Dogfinder-Mockups?node-id=0-1&t=OwYDP5B78jPPnfLN-1)
 - Reportes de seguridad/calidad.
-- Video demo de 30 a 60 segundos.
+- Video.[Ver video demostrativo](docs/video)
 - Presentación final.
