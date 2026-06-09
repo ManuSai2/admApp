@@ -4,8 +4,9 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.MatrixCursor
-import android.util.Log
 import android.net.Uri
+import android.util.Log
+import com.example.admapp.data.local.DogFinderDatabase
 
 class FavoriteBreedsProvider : ContentProvider() {
 
@@ -23,37 +24,33 @@ class FavoriteBreedsProvider : ContentProvider() {
     ): Cursor {
         Log.d("FavoriteBreedsProvider", "Query executed: $uri")
 
-        val cursor = MatrixCursor(arrayOf("_id", "name", "source"))
-        cursor.addRow(arrayOf(1, "favorite_breeds_provider_ready", "Dog Finder"))
+        val cursor = MatrixCursor(arrayOf("_id", "name", "subBreeds"))
+
+        try {
+            val db = DogFinderDatabase.getInstance(context!!)
+            val favorites = db.favoriteBreedDao().getAllFavoritesSync()
+
+            favorites.forEachIndexed { index, entity ->
+                cursor.addRow(arrayOf(index + 1, entity.breedName, entity.subBreeds))
+            }
+
+            Log.d("FavoriteBreedsProvider", "Returning ${favorites.size} favorites")
+        } catch (e: Exception) {
+            Log.e("FavoriteBreedsProvider", "Error querying favorites: ${e.message}")
+        }
 
         return cursor
     }
 
-    override fun getType(uri: Uri): String {
-        return "vnd.android.cursor.dir/vnd.com.example.admapp.favoritebreeds"
-    }
+    override fun getType(uri: Uri) =
+        "vnd.android.cursor.dir/vnd.com.example.admapp.favoritebreeds"
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         Log.d("FavoriteBreedsProvider", "Insert not implemented")
         return null
     }
 
-    override fun delete(
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<out String>?
-    ): Int {
-        Log.d("FavoriteBreedsProvider", "Delete not implemented")
-        return 0
-    }
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?) = 0
 
-    override fun update(
-        uri: Uri,
-        values: ContentValues?,
-        selection: String?,
-        selectionArgs: Array<out String>?
-    ): Int {
-        Log.d("FavoriteBreedsProvider", "Update not implemented")
-        return 0
-    }
+    override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?) = 0
 }

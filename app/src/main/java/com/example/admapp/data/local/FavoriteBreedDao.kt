@@ -24,4 +24,7 @@ interface FavoriteBreedDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorite_breeds WHERE breedName = :breedName)")
     fun isFavorite(breedName: String): Flow<Boolean>
+
+    @Query("SELECT * FROM favorite_breeds")
+    fun getAllFavoritesSync(): List<FavoriteBreedEntity>
 }
