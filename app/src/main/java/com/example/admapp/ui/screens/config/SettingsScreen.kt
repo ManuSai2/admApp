@@ -1,6 +1,7 @@
 package com.example.admapp.ui.screens.config
 
-import androidx.compose.animation.AnimatedVisibility
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,9 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.Coil
 import com.example.admapp.ui.screens.favorites.FavoritesViewModel
-
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +33,10 @@ fun SettingsScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showClearCacheDialog by remember { mutableStateOf(false) }
     var cacheCleared by remember { mutableStateOf(false) }
+
+    val providerRowCount by favoritesViewModel.uiState
+        .map { it.favorites.size }
+        .collectAsState(initial = 0)
 
     Scaffold(
         topBar = {
@@ -86,11 +90,26 @@ fun SettingsScreen(
             }
 
             SettingsSection(title = "Datos") {
+                // ContentProvider badge
+                SettingsActionItem(
+                    icon = Icons.Outlined.Storage,
+                    title = "ContentProvider activo",
+                    subtitle = "$providerRowCount ${if (providerRowCount == 1) "fila expuesta" else "filas expuestas"} via content://",
+                    onClick = { }
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                // Limpiar caché
                 SettingsActionItem(
                     icon = Icons.Outlined.DeleteSweep,
                     title = "Limpiar caché de imágenes",
-                    subtitle = "Libera espacio eliminando imágenes guardadas",
-                    iconTint = MaterialTheme.colorScheme.error,
+                    subtitle = if (cacheCleared)
+                        "✓ Caché limpiado — las fotos se recargarán"
+                    else
+                        "Elimina imágenes guardadas y recarga nuevas fotos random",
+                    iconTint = if (cacheCleared)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.error,
                     onClick = { showClearCacheDialog = true }
                 )
             }
@@ -107,7 +126,18 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Share,
                     title = "Compartir la app",
                     subtitle = "Recomendá DogFinder a tus amigos",
-                    onClick = { /* Intent de compartir */ }
+                    onClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, "¡Mirá esta app!")
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Te recomiendo DogFinder, una app para explorar razas de perros 🐶\n" +
+                                        "Descargala en: https://play.google.com/store/apps/details?id=com.example.admapp"
+                            )
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Compartir con..."))
+                    }
                 )
             }
 
@@ -120,7 +150,7 @@ fun SettingsScreen(
             onDismissRequest = { showClearCacheDialog = false },
             icon = { Icon(Icons.Outlined.DeleteSweep, contentDescription = null) },
             title = { Text("¿Limpiar caché?") },
-            text = { Text("Se eliminarán las imágenes guardadas localmente.") },
+            text = { Text("Se eliminarán las imágenes guardadas. Al volver a Favoritos se descargarán fotos nuevas y random para cada raza.") },
             confirmButton = {
                 TextButton(onClick = {
                     coil.Coil.imageLoader(context).memoryCache?.clear()
@@ -128,16 +158,13 @@ fun SettingsScreen(
                     favoritesViewModel.clearImageCache()
                     cacheCleared = true
                     showClearCacheDialog = false
-                }) {
-                    Text("Limpiar", color = MaterialTheme.colorScheme.error)
-                }
+                }) { Text("Limpiar", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showClearCacheDialog = false }) { Text("Cancelar") }
             }
         )
     }
-
 
     if (showAboutDialog) {
         AlertDialog(
@@ -147,9 +174,11 @@ fun SettingsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Versión 1.0.0")
-                    Text("Datos provistos por dog.ceo/dog-api",
+                    Text(
+                        "Datos provistos por dog.ceo/dog-api",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             },
             confirmButton = {
@@ -173,9 +202,7 @@ private fun SettingsSection(
     )
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(content = content)
@@ -197,20 +224,13 @@ private fun SettingsToggleItem(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
-        )
+        Icon(imageVector = icon, contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
@@ -231,26 +251,15 @@ private fun SettingsActionItem(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = Modifier.size(24.dp)
-        )
+        Icon(imageVector = icon, contentDescription = null,
+            tint = iconTint, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(Icons.Default.ChevronRight, contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
     }
 }
