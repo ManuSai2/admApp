@@ -1,13 +1,16 @@
 package com.example.admapp
 
+import android.Manifest
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -39,11 +42,24 @@ import retrofit2.converter.gson.GsonConverterFactory
 class MainActivity : ComponentActivity() {
 
     private val networkChangeReceiver = NetworkChangeReceiver()
+    
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            startDogSyncService()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        startDogSyncService()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            startDogSyncService()
+        }
+
         registerNetworkReceiver()
         queryFavoriteBreedsProvider()
 
@@ -74,7 +90,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 
     private fun startDogSyncService() {
         val serviceIntent = Intent(this, DogSyncService::class.java)
